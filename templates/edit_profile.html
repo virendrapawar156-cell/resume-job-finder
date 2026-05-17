@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <a class="back-link" href="/profile/{{ profile.id }}">← Back to profile</a>
+      <h1>Edit Profile</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <form action="/profile/{{ profile.id }}/edit" method="post">
+        <label for="name">Profile name</label>
+        <input type="text" id="name" name="name" value="{{ profile.name }}" />
+
+        <label for="skills">Skills (one per line)</label>
+        <textarea id="skills" name="skills">{{ profile.skills | join('\n') }}</textarea>
+
+        <label for="education">Education</label>
+        <textarea id="education" name="education">{{ profile.education | join('\n') }}</textarea>
+
+        <label for="experience">Experience</label>
+        <textarea id="experience" name="experience">{{ profile.experience | join('\n') }}</textarea>
+
+        <label for="projects">Projects</label>
+        <textarea id="projects" name="projects">{{ profile.projects | join('\n') }}</textarea>
+
+        <label for="roles">Roles (one per line)</label>
+        <textarea id="roles" name="roles">{{ profile.roles | join('\n') }}</textarea>
+
+        <label for="cover_letter">Saved Cover Letter</label>
+        <textarea id="cover_letter" name="cover_letter">{{ profile.cover_letter or '' }}</textarea>
+
+        <button type="submit">Save changes</button>
+      </form>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Analysis Results</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <a class="back-link" href="/">← Upload another resume</a>
+      <a class="secondary-link" href="/profiles">View saved profiles</a>
+
+      <h1>📊 Resume Analysis Results</h1>
+      {% if profile_saved %}
+      <div class="success-banner">
+        Profile "{{ profile_name }}" saved successfully.
+        <a href="/profile/{{ profile_id }}">View profile</a>
+      </div>
+      {% endif %}
+
+      <!-- Advanced Search Box -->
+      <div class="search-box-section">
+        <input type="text" id="results-search" placeholder="🔍 Search through results..." data-search-type="general" />
+      </div>
+
+      <section>
+        <h2>Extracted Skills</h2>
+        {% if skills %}
+        <div class="skills-filter-section">
+          <div data-skill-filters></div>
+        </div>
+        <div class="chips" data-skills-chart>
+          {% for skill in skills %}
+          <span class="chip" data-searchable>{{ skill }}</span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p>No skills were detected automatically.</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>Recommended Roles</h2>
+        <ul>
+          {% for score in role_scores %}
+          <li data-searchable data-filterable data-filter-type="role">
+            <strong>{{ score.role }}</strong> — {{ score.score }}% match
+            <div class="small">{{ score.description }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {% if career_insights %}
+      <section>
+        <h2>AI Career GPS</h2>
+        <p>{{ feedback.overview }}</p>
+        <div class="grid">
+          <div>
+            <h3>3 months</h3>
+            <p>${{ career_insights.salary_growth['3_months'] | int }}</p>
+          </div>
+          <div>
+            <h3>1 year</h3>
+            <p>${{ career_insights.salary_growth['1_year'] | int }}</p>
+          </div>
+          <div>
+            <h3>3 years</h3>
+            <p>${{ career_insights.salary_growth['3_years'] | int }}</p>
+          </div>
+        </div>
+        <h3>Companies most likely to hire</h3>
+        <ul>
+          {% for company in career_insights.companies %}
+          <li>{{ company }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if recruiter_review %}
+      <section>
+        <h2>Recruiter Brain Score</h2>
+        <ul class="score-list">
+          <li>Confidence: {{ recruiter_review.confidence }}%</li>
+          <li>Leadership: {{ recruiter_review.leadership }}%</li>
+          <li>Technical depth: {{ recruiter_review.technical_depth }}%</li>
+          <li>Communication: {{ recruiter_review.communication }}%</li>
+          <li>ATS compatibility: {{ recruiter_review.ats }}%</li>
+          <li>Portfolio quality: {{ recruiter_review.portfolio }}%</li>
+        </ul>
+        <div class="note">
+          <strong>Why recruiter may reject this resume:</strong> {{ feedback.rejection }}
+        </div>
+        <div class="note">
+          <strong>How to improve in 10 seconds:</strong> {{ feedback.quick_tip }}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if career_insights and career_insights.skill_demand %}
+      <section>
+        <h2>Skill Demand Snapshot</h2>
+        <table class="demand-table">
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th>Market Demand</th>
+              <th>Your Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in career_insights.skill_demand %}
+            <tr>
+              <td>{{ item.skill }}</td>
+              <td>{{ item.market_demand }}%</td>
+              <td>{{ item.your_level }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      <section>
+        <h2>Resume Sections</h2>
+        <div class="grid">
+          <div>
+            <h3>Education</h3>
+            <ul>
+              {% for line in education %}
+              <li data-searchable data-filterable data-filter-type="education">{{ line }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div>
+            <h3>Experience</h3>
+            <ul>
+              {% for line in experience %}
+              <li data-searchable data-filterable data-filter-type="experience">{{ line }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <div>
+            <h3>Projects</h3>
+            <ul>
+              {% for line in projects %}
+              <li data-searchable data-filterable data-filter-type="projects">{{ line }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Job Search Links</h2>
+        <p>Use these search queries to find jobs on safe public sites.</p>
+        <ul class="search-links">
+          {% for item in job_links %}
+          <li data-searchable data-filterable data-filter-type="job-search">
+            <strong>{{ item.site }}</strong> — <em>{{ item.query }}</em>
+            <a href="{{ item.url }}" target="_blank" rel="noopener">Open search</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section>
+        <h2>Direct Job API Results</h2>
+        {% if api_jobs %}
+        <ul class="job-api-list">
+          {% for job in api_jobs %}
+          <li data-searchable data-filterable data-filter-type="job">
+            <a href="{{ job.url }}" target="_blank" rel="noopener"><strong>{{ job.title }}</strong></a>
+            <div>{{ job.company }} · {{ job.location }}</div>
+            <div class="small">Source: {{ job.source }}</div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p>No API job results were available for this search query.</p>
+        {% endif %}
+      </section>
+
+      <section>
+        <h2>Generated Cover Letter</h2>
+        <p>You can copy this letter and tailor it further for the role.</p>
+        <textarea readonly class="cover-letter">{{ cover_letter }}</textarea>
+      </section>
+
+      <section>
+        <h2>Raw Parsed Text</h2>
+        <pre>{{ raw_text }}</pre>
+      </section>
+    </div>
+
+    <!-- Advanced JavaScript Features -->
+    <script src="/static/notification-system.js"></script>
+    <script src="/static/form-validator.js"></script>
+    <script src="/static/skills-visualizer.js"></script>
+    <script src="/static/search-manager.js"></script>
+    <script src="/static/main.js"></script>
+  </body>
+</html>

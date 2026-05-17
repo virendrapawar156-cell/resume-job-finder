@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Saved Profiles</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <a class="back-link" href="/">← Back to upload</a>
+      <h1>📚 Saved Profiles</h1>
+
+      {% if profiles %}
+      <!-- Advanced Search Box -->
+      <div class="search-box-section">
+        <input type="text" id="profiles-search" placeholder="🔍 Search profiles..." data-search-type="profiles" />
+      </div>
+
+      <ul class="profile-list">
+        {% for profile in profiles %}
+        <li data-searchable data-filterable>
+          <a href="/profile/{{ profile.id }}"><strong>{{ profile.name }}</strong></a>
+          <div class="small">Saved at {{ profile.created_at }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>No profiles saved yet. Upload a resume and check "Save this profile".</p>
+      {% endif %}
+    </div>
+
+    <!-- Advanced JavaScript Features -->
+    <script src="/static/notification-system.js"></script>
+    <script src="/static/form-validator.js"></script>
+    <script src="/static/search-manager.js"></script>
+    <script src="/static/main.js"></script>
+  </body>
+</html>

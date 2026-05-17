@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile Details</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <a class="back-link" href="/profiles">← Back to saved profiles</a>
+      <h1>{{ profile.name }}</h1>
+      <p class="small">Saved at {{ profile.created_at }}</p>
+
+      <section>
+        <h2>Skills</h2>
+        {% if profile.skills %}
+        <div class="skills-filter-section">
+          <div data-skill-filters></div>
+        </div>
+        <div class="chips" data-skills-chart>
+          {% for skill in profile.skills %}
+          <span class="chip" data-searchable>{{ skill }}</span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p>No skills stored.</p>
+        {% endif %}
+      </section>
+
+      {% if career_insights %}
+      <section>
+        <h2>AI Career GPS</h2>
+        <p>{{ feedback.overview }}</p>
+        <ul>
+          {% for company in career_insights.companies %}
+          <li>{{ company }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if recruiter_review %}
+      <section>
+        <h2>Recruiter Brain Score</h2>
+        <ul class="score-list">
+          <li>Confidence: {{ recruiter_review.confidence }}%</li>
+          <li>Leadership: {{ recruiter_review.leadership }}%</li>
+          <li>Technical depth: {{ recruiter_review.technical_depth }}%</li>
+          <li>Communication: {{ recruiter_review.communication }}%</li>
+          <li>ATS compatibility: {{ recruiter_review.ats }}%</li>
+          <li>Portfolio quality: {{ recruiter_review.portfolio }}%</li>
+        </ul>
+        <p><strong>Why recruiter may reject this resume:</strong> {{ feedback.rejection }}</p>
+        <p><strong>How to improve in 10 seconds:</strong> {{ feedback.quick_tip }}</p>
+      </section>
+      {% endif %}
+
+      <section>
+        <h2>Education</h2>
+        <ul>
+          {% for item in profile.education %}
+          <li data-searchable>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section>
+        <h2>Experience</h2>
+        <ul>
+          {% for item in profile.experience %}
+          <li data-searchable>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section>
+        <h2>Projects</h2>
+        <ul>
+          {% for item in profile.projects %}
+          <li data-searchable>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section>
+        <h2>Recommended Roles</h2>
+        <ul>
+          {% for role in profile.roles %}
+          <li data-searchable>{{ role }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section>
+        <h2>Saved Cover Letter</h2>
+        {% if profile.cover_letter %}
+        <textarea readonly class="cover-letter">{{ profile.cover_letter }}</textarea>
+        {% else %}
+        <p>No cover letter was saved for this profile.</p>
+        {% endif %}
+      </section>
+
+      <a class="secondary-link" href="/profile/{{ profile.id }}/edit">Edit this profile</a>
+    </div>
+
+    <!-- Advanced JavaScript Features -->
+    <script src="/static/notification-system.js"></script>
+    <script src="/static/form-validator.js"></script>
+    <script src="/static/skills-visualizer.js"></script>
+    <script src="/static/search-manager.js"></script>
+    <script src="/static/main.js"></script>
+  </body>
+</html>

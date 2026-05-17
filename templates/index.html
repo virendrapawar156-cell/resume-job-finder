@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Job Assistant</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎯 Resume Job Assistant</h1>
+      <p>Upload your resume and the assistant will suggest suitable roles and job search queries.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <form action="/analyze" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="profile_name">Profile name (optional):</label>
+          <input type="text" name="profile_name" id="profile_name" placeholder="e.g. Data Science Profile" data-validate />
+        </div>
+
+        <div class="form-group">
+          <label for="resume">Select your resume (PDF or DOCX):</label>
+          <input type="file" name="resume" id="resume" accept=".pdf,.docx" required data-validate />
+        </div>
+
+        <label class="checkbox">
+          <input type="checkbox" name="save_profile" /> Save this profile for later
+        </label>
+        <button type="submit" class="btn-primary">📤 Upload & Analyze</button>
+      </form>
+
+      <p><a class="secondary-link" href="/profiles">View saved profiles</a></p>
+
+      <section class="notes">
+        <h2>How it works</h2>
+        <ul>
+          <li>Extracts text from your resume.</li>
+          <li>Detects skills, education, projects, and experience.</li>
+          <li>Recommends job roles based on skills.</li>
+          <li>Builds safe job search links instead of scraping.</li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Advanced JavaScript Features -->
+    <script src="/static/notification-system.js"></script>
+    <script src="/static/form-validator.js"></script>
+    <script src="/static/file-upload.js"></script>
+    <script src="/static/skills-visualizer.js"></script>
+    <script src="/static/search-manager.js"></script>
+    <script src="/static/main.js"></script>
+  </body>
+</html>
