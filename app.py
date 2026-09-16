@@ -6,8 +6,17 @@ import sqlite3
 import datetime
 from flask import Flask, request, render_template, redirect, url_for, flash
 from werkzeug.utils import secure_filename
-import pdfplumber
-import docx
+
+try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
+
+try:
+    import docx
+except ImportError:
+    docx = None
+
 import requests
 
 try:
@@ -28,6 +37,7 @@ ALLOWED_EXTENSIONS = {"pdf", "docx"}
 app = Flask(__name__)
 app.secret_key = "change-this-secret"
 app.config["UPLOAD_FOLDER"] = UPLOAD_DIR
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 SKILL_KEYWORDS = [
@@ -63,6 +73,17 @@ SECTION_PATTERNS = {
     "experience": re.compile(r"(experience|work history|professional experience|internship|employment)", re.I),
     "projects": re.compile(r"(projects|academic projects|project experience|portfolio)", re.I),
     "skills": re.compile(r"(skills|technical skills|programming skills|tools)", re.I),
+}
+
+FIELD_PATTERNS = {
+    "Electrical Engineer": re.compile(r"\b(electrical|electronics|power system|circuit|motor|transformer|control systems|pcb|semiconductor)\b", re.I),
+    "Mechanical Engineer": re.compile(r"\b(mechanical|cad|solidworks|thermodynamics|fluid power|machine design|manufacturing)\b", re.I),
+    "Civil Engineer": re.compile(r"\b(civil|structural|construction|infrastructure|roads|bridges|surveying|site development)\b", re.I),
+    "Project Manager": re.compile(r"\b(project manager|project management|scrum master|agile|delivery manager|program manager)\b", re.I),
+    "Data Analyst": re.compile(r"\b(data analysis|data analyst|tableau|power bi|excel|statistics|data visualization)\b", re.I),
+    "Sales Representative": re.compile(r"\b(sales|account executive|business development|client relations|crm|quota|pipeline)\b", re.I),
+    "Marketing Specialist": re.compile(r"\b(marketing|digital marketing|seo|sem|content strategy|social media|campaigns)\b", re.I),
+    "Healthcare Professional": re.compile(r"\b(nurse|medical|healthcare|patient care|clinical|pharmacy|therapist)\b", re.I),
 }
 
 BULLET_PATTERN = re.compile(r"^[\-\u2022\*\d\.\)]+\s*(.*)$")
@@ -112,6 +133,8 @@ def init_db():
         conn.execute("ALTER TABLE profiles ADD COLUMN cover_letter TEXT")
         conn.commit()
     conn.close()
+
+init_db()
 
 
 def serialize_list(items):
@@ -220,14 +243,13 @@ def init_db():
     conn.close()
 
 
-init_db()
-
-
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def extract_text_from_pdf(path):
+    if not pdfplumber:
+        raise RuntimeError("PDF parsing requires pdfplumber. Install it with 'pip install pdfplumber'.")
     text = []
     with pdfplumber.open(path) as pdf:
         for page in pdf.pages:
@@ -238,6 +260,8 @@ def extract_text_from_pdf(path):
 
 
 def extract_text_from_docx(path):
+    if not docx:
+        raise RuntimeError("DOCX parsing requires python-docx. Install it with 'pip install python-docx'.")
     document = docx.Document(path)
     paragraphs = [p.text for p in document.paragraphs if p.text.strip()]
     for table in document.tables:
@@ -553,13 +577,24 @@ def build_profile_insights(profile):
     return career_insights, recruiter_review, feedback
 
 
-def build_job_search_links(roles, skills):
+def extract_field_queries(text):
+    queries = []
+    for field, pattern in FIELD_PATTERNS.items():
+        if pattern.search(text):
+            queries.append(field)
+    return queries[:3]
+
+
+def build_job_search_links(roles, skills, text=""):
     queries = []
     if roles:
         queries.append(" ".join(role["role"] for role in roles[:2]))
     if skills:
         queries.append(" ".join(skills[:4]))
-    queries.append("software engineer internship")
+    field_queries = extract_field_queries(text)
+    queries.extend(field_queries)
+    if not queries:
+        queries.append("jobs")
     queries = [q.strip().replace(' ', '+') for q in queries if q.strip()]
     search_links = []
     for query in queries:
@@ -620,6 +655,12 @@ def index():
     return render_template('index.html')
 
 
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    flash('The resume must be smaller than 10 MB.', 'error')
+    return redirect(url_for('index'))
+
+
 @app.route('/analyze', methods=['POST'])
 def analyze():
     if 'resume' not in request.files:
@@ -638,13 +679,18 @@ def analyze():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
     file.save(filepath)
 
-    text = parse_resume(filepath)
+    try:
+        text = parse_resume(filepath)
+    except RuntimeError as err:
+        flash(str(err), 'error')
+        return redirect(url_for('index'))
+
     skills = extract_skills(text)
     sections = extract_text_sections(text)
     role_scores = recommend_roles(skills)
     roles = [item["role"] for item in role_scores]
-    job_links = build_job_search_links(role_scores, skills)
-    api_jobs = search_jobs_api(roles[0] if roles else "software engineer")
+    job_links = build_job_search_links(role_scores, skills, text)
+    api_jobs = search_jobs_api(roles[0] if roles else ("jobs" if not skills else " ".join(skills[:4])))
     cover_letter = generate_cover_letter(
         profile_name=request.form.get('profile_name', '').strip() or 'Applicant',
         top_role=roles[0] if roles else 'Software Engineer',

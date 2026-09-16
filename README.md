@@ -44,7 +44,23 @@ $env:OPENAI_API_KEY = 'your-api-key'
 python app.py
 ```
 
-4. Open `http://127.0.0.1:5000` in your browser.
+Open `http://127.0.0.1:5000` in your browser.
+
+## Deployment
+
+This is a Flask server application, not a static Cloudflare Pages site or a
+Cloudflare Worker. Deploy the repository to a Python/container host that runs
+the `Procfile` or `Dockerfile` (for example Render, Railway, Fly.io, or a VM).
+The public service must forward both `GET /` and `POST /analyze` to the Flask
+process. A `workers.dev` URL by itself does not run `app.py`, so it will return
+404 for `/analyze` unless a separate Worker explicitly proxies that route to a
+running Flask service.
+
+For a container host, use:
+
+```text
+gunicorn --bind 0.0.0.0:$PORT app:app
+```
 
 ## Notes
 
